@@ -13,6 +13,7 @@ public class HttpRequest {
   final private String url;
   final private String httpVersion;
   final private HashMap<String, String> headers;
+  final private String rawRequest;
 
   public HttpRequest(InputStream clientInputStream) throws IOException, MalformedRequestException {
     try (BufferedReader br = new BufferedReader(new InputStreamReader(clientInputStream))) {
@@ -23,10 +24,13 @@ public class HttpRequest {
       httpVersion = parts[2];
 
       headers = new HashMap<String, String>(16);
+      StringBuffer sb = new StringBuffer();
       while ((line = br.readLine()) != null) {
+        sb.append(line);
         parts = line.split("\\s*:\\s*");
         headers.put(parts[0], parts[1]);
       }
+      rawRequest = sb.toString();
     } catch (IOException e) {
       System.out.printf("Exception in HttpRequest: %s\n", e.getMessage());
       throw e;
@@ -49,5 +53,9 @@ public class HttpRequest {
 
   public HashMap<String, String> getHeaders() {
     return headers;
+  }
+
+  public byte[] toByteBuffer() {
+    return rawRequest.getBytes();
   }
 }
