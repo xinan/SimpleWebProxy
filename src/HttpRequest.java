@@ -16,20 +16,28 @@ public class HttpRequest {
   final private String rawRequest;
 
   public HttpRequest(InputStream clientInputStream) throws IOException, MalformedRequestException {
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(clientInputStream))) {
+    try {
+      BufferedReader br = new BufferedReader(new InputStreamReader(clientInputStream));
       String line;
-      String[] parts = br.readLine().split("\\s+");
+      StringBuffer sb = new StringBuffer();
+
+      line = br.readLine();
+      String[] parts = line.split("\\s+");
       method = parts[0];
       url = parts[1];
-      httpVersion = parts[2];
+      httpVersion = parts[2].split("/")[1];
+      sb.append(line).append("\r\n");
 
       headers = new HashMap<String, String>(16);
-      StringBuffer sb = new StringBuffer();
-      while ((line = br.readLine()) != null) {
-        sb.append(line);
+      while ((line = br.readLine()) != null && !line.trim().isEmpty()) {
         parts = line.split("\\s*:\\s*");
         headers.put(parts[0], parts[1]);
+        if (parts[0].equals("Connection")) {
+          continue; // Do not keep-alive.
+        }
+        sb.append(line).append("\r\n");
       }
+      sb.append("\r\n"); // Indicate end of request.
       rawRequest = sb.toString();
     } catch (IOException e) {
       System.out.printf("Exception in HttpRequest: %s\n", e.getMessage());
@@ -55,7 +63,15 @@ public class HttpRequest {
     return headers;
   }
 
+  public String getHost() {
+    return headers.get("Host");
+  }
+
   public byte[] toByteBuffer() {
     return rawRequest.getBytes();
+  }
+
+  public String toString() {
+    return rawRequest;
   }
 }
