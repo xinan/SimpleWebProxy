@@ -24,7 +24,7 @@ public class RequestHandlerThread extends Thread {
       try {
         HttpRequest clientRequest = new HttpRequest(clientSocket.getInputStream());
         BufferedOutputStream clientOut = new BufferedOutputStream(clientSocket.getOutputStream(), BUFFER_SIZE);
-        System.out.printf("Client %s requesting %s\n", clientSocket.getInetAddress(), clientRequest.getUrl());
+        System.out.printf("[%s] %s\n", clientSocket.getInetAddress(), clientRequest);
 
         Socket serverSocket = new Socket(clientRequest.getHost(), 80);
 
@@ -39,6 +39,7 @@ public class RequestHandlerThread extends Thread {
           clientOut.write(buffer, 0, bytesRead);
           clientOut.flush();
         }
+        System.out.printf("Done. Active Thread: %d\r", Thread.activeCount());
 
         serverSocket.close();
         clientSocket.close();
