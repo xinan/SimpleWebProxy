@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 
 /**
@@ -9,36 +6,58 @@ import java.util.HashMap;
  */
 public class HttpRequest {
 
-  final private String method;
-  final private String url;
-  final private String httpVersion;
-  final private HashMap<String, String> headers;
-  final private String rawRequest;
+  private String method;
+  private String url;
+  private String httpVersion;
+  private HashMap<String, String> headers;
+  private byte[] rawRequest;
 
   public HttpRequest(InputStream clientInputStream) throws IOException, MalformedRequestException {
     try {
-      BufferedReader br = new BufferedReader(new InputStreamReader(clientInputStream));
-      String line;
-      StringBuffer sb = new StringBuffer();
+      BufferedInputStream in = new BufferedInputStream(clientInputStream);
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      headers = new HashMap<String, String>();
 
-      line = br.readLine();
-      String[] parts = line.split("\\s+");
-      method = parts[0];
-      url = parts[1];
-      httpVersion = parts[2].split("/")[1];
-      sb.append(line).append("\r\n");
-
-      headers = new HashMap<String, String>(16);
-      while ((line = br.readLine()) != null && !line.trim().isEmpty()) {
-        parts = line.split("\\s*:\\s*");
-        headers.put(parts[0], parts[1]);
-        if (parts[0].equals("Connection")) {
-          continue; // Do not keep-alive.
+      StringBuilder line = new StringBuilder();
+      int b;
+      boolean isFirstLine = true;
+      String[] parts;
+      while ((b = in.read()) > 0) {
+        line.append((char) b);
+        if (line.length() >= 2 && line.substring(line.length() - 2).equals("\r\n")) {
+          if (line.length() == 2) {
+            out.write(line.toString().getBytes());
+            break;
+          } else if (isFirstLine) {
+            parts = line.toString().trim().split("\\s");
+            method = parts[0];
+            url = parts[1];
+            httpVersion = parts[2].split("/")[1];
+            isFirstLine = false;
+          } else {
+            parts = line.toString().trim().split("\\s*:\\s*");
+            if (parts[0].equals("Connection")) {
+              line.setLength(0);
+              continue;
+            }
+            headers.put(parts[0], parts[1]);
+          }
+          out.write(line.toString().getBytes());
+          line.setLength(0);
         }
-        sb.append(line).append("\r\n");
       }
-      sb.append("\r\n"); // Indicate end of request.
-      rawRequest = sb.toString();
+
+      if (headers.containsKey("Content-Length")) {
+        int bodySize = Integer.parseInt(headers.get("Content-Length"));
+        byte[] buffer = new byte[bodySize];
+        int read = in.read(buffer, 0, bodySize);
+        if (read != bodySize) {
+          throw new MalformedRequestException("Content-Length mismatch!");
+        }
+        out.write(buffer);
+      }
+
+      rawRequest = out.toByteArray();
     } catch (IOException e) {
       System.out.printf("Exception in HttpRequest: %s\n", e.getMessage());
       throw e;
@@ -68,10 +87,10 @@ public class HttpRequest {
   }
 
   public byte[] toByteBuffer() {
-    return rawRequest.getBytes();
+    return rawRequest;
   }
 
   public String toString() {
-    return rawRequest;
+    return String.format("%s %s", method, url);
   }
 }
