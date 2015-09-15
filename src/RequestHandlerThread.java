@@ -23,7 +23,7 @@ public class RequestHandlerThread extends Thread {
     try {
       HttpRequest clientRequest = new HttpRequest(clientSocket.getInputStream());
       BufferedOutputStream clientOut = new BufferedOutputStream(clientSocket.getOutputStream(), BUFFER_SIZE);
-      System.out.printf("[%s] %s\n", clientSocket.getInetAddress(), clientRequest);
+      System.out.printf("[%s] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), clientRequest);
 
       Socket serverSocket = new Socket(clientRequest.getHost(), 80);
 
