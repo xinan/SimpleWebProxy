@@ -8,7 +8,7 @@ import java.net.SocketException;
 public class WebProxy {
   public static void main(String[] args) {
     try {
-      int port = Integer.parseInt("1234");
+      int port = Integer.parseInt(args[0]);
       ServerSocket socket = new ServerSocket(port);
       Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
