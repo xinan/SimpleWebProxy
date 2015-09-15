@@ -9,7 +9,7 @@ public class WebProxy {
   public static void main(String[] args) {
     try {
       int port = Integer.parseInt(args[0]);
-      ServerSocket socket = new ServerSocket(port);
+      final ServerSocket socket = new ServerSocket(port);
       Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
