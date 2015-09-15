@@ -9,44 +9,54 @@ public class HttpRequest {
   private String method;
   private String url;
   private String httpVersion;
-  private HashMap<String, String> headers;
+  private HashMap<String, String> headers = new HashMap<String, String>();
   private byte[] rawRequest;
 
   public HttpRequest(InputStream clientInputStream) throws IOException, MalformedRequestException {
     try {
       BufferedInputStream in = new BufferedInputStream(clientInputStream);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
-      headers = new HashMap<String, String>();
 
-      StringBuilder line = new StringBuilder();
-      int b;
-      boolean isFirstLine = true;
-      String[] parts;
-      while ((b = in.read()) > 0) {
-        line.append((char) b);
-        if (line.length() >= 2 && line.substring(line.length() - 2).equals("\r\n")) {
-          if (line.length() == 2) {
-            out.write(line.toString().getBytes());
-            break;
-          } else if (isFirstLine) {
-            parts = line.toString().trim().split("\\s");
-            method = parts[0];
-            url = parts[1];
-            httpVersion = parts[2].split("/")[1];
-            isFirstLine = false;
-          } else {
-            parts = line.toString().trim().split("\\s*:\\s*");
-            if (parts[0].equals("Connection")) {
-              line.setLength(0);
-              continue;
-            }
-            headers.put(parts[0], parts[1]);
-          }
-          out.write(line.toString().getBytes());
-          line.setLength(0);
+      String header = "";
+      int len;
+
+      // Reading headers
+      while (true) {
+        header += (char) in.read();
+        len = header.length();
+        if (header.charAt(len - 1) == '\n' && header.charAt(len - 2) == '\r' &&
+            header.charAt(len - 3) == '\n' && header.charAt(len - 4) == '\r') {
+          break;
         }
       }
 
+      // Process headers
+      int toIndex = header.indexOf("\r\n", 0);
+      String line = header.substring(0, toIndex - 3) + "1.0";
+      out.write(line.getBytes());
+      out.write("\r\n".getBytes());
+      String[] parts = line.split("\\s");
+      method = parts[0];
+      url = parts[1];
+      httpVersion = parts[2].substring(4);
+
+      int fromIndex = toIndex + 2;
+      while ((toIndex = header.indexOf("\r\n", fromIndex)) != -1) {
+        line = header.substring(fromIndex, toIndex);
+        fromIndex = toIndex + 2;
+        if (line.isEmpty()) {
+          out.write("\r\n".getBytes());
+          break;
+        }
+        parts = line.split("\\s*:\\s*");
+        if (!parts[0].equals("Connection")) {
+          out.write(line.getBytes());
+          out.write("\r\n".getBytes());
+          headers.put(parts[0], parts[1]);
+        }
+      }
+
+      // Read body if "Content-Length" is present in the headers.
       if (headers.containsKey("Content-Length")) {
         int bodySize = Integer.parseInt(headers.get("Content-Length"));
         byte[] buffer = new byte[bodySize];
