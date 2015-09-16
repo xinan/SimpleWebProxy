@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 /**
@@ -17,6 +18,7 @@ public class RequestHandlerThread extends Thread {
   public void run() {
     try {
       try {
+        clientSocket.setSoTimeout(1000);
         HttpRequest clientRequest = new HttpRequest(clientSocket.getInputStream());
         System.out.printf("[%s] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), clientRequest);
 
@@ -28,7 +30,9 @@ public class RequestHandlerThread extends Thread {
 
         serverSocket.close();
       } catch (SocketException e) {
-        System.out.printf("Client closed connection.\n");
+        System.out.printf("[%s] Abandon request\n", clientSocket.getInetAddress().getCanonicalHostName());
+      } catch (SocketTimeoutException e) {
+        System.out.printf("Socket read timeout. Ignore\n");
       } catch (UnknownHostException e) {
         clientSocket.getOutputStream().write("HTTP/1.0 502 Bad Gateway\r\n\r\n".getBytes());
       } catch (IOException e) {

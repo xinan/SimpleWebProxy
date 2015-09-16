@@ -54,7 +54,6 @@ public class HttpResponse {
       }
       rawHeaders = out.toByteArray();
     } catch (IOException e) {
-      System.out.printf("Exception in HttpResponse: %s\n", e.getMessage());
       throw e;
     } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
       throw new MalformedResponseException("Invalid response from server!");
