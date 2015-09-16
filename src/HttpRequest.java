@@ -20,7 +20,7 @@ public class HttpRequest {
       String header = "";
       int len;
 
-      // Reading headers
+      // Reading request headers
       while (true) {
         header += (char) in.read();
         len = header.length();
@@ -30,7 +30,7 @@ public class HttpRequest {
         }
       }
 
-      // Process headers
+      // Process request headers
       int toIndex = header.indexOf("\r\n", 0);
       String line = header.substring(0, toIndex - 3) + "1.0";
       out.write(line.getBytes());
