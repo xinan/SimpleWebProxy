@@ -50,8 +50,9 @@ public class ProgressBar {
     }
     int numEquals = (int) (percentage / 100F * (numCols - 6));
     int numSpaces = numCols - 6 - numEquals;
+    int remainingCount = (percentage == 100) ? Thread.activeCount() - 3 : Thread.activeCount() - 2;
     String processed = new String(equals, 0, numEquals);
     String remaining = new String(spaces, 0, numSpaces);
-    return String.format("|%s%s%3d%%| Remaining: %d\r", processed, remaining, percentage, Thread.activeCount() - 3);
+    return String.format("|%s%s%3d%%| Remaining: %d\r", processed, remaining, percentage, remainingCount);
   }
 }
