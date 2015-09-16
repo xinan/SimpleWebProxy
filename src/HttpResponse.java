@@ -75,7 +75,7 @@ public class HttpResponse {
     BufferedOutputStream out = new BufferedOutputStream(clientOutputStream);
     out.write(rawHeaders);
     int bytesRead;
-    byte[] buffer = new byte[65536];
+    byte[] buffer = new byte[Constants.BUFFER_SIZE];
     while ((bytesRead = in.read(buffer)) > 0) {
       out.write(buffer, 0, bytesRead);
       out.flush();

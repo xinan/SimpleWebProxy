@@ -9,15 +9,9 @@ import java.net.UnknownHostException;
 public class RequestHandlerThread extends Thread {
 
   final private Socket clientSocket;
-  final private int BUFFER_SIZE;
 
   public RequestHandlerThread(Socket clientSocket) {
-    this(clientSocket, 65536);
-  }
-
-  public RequestHandlerThread(Socket clientSocket, int bufferSize) {
     this.clientSocket = clientSocket;
-    BUFFER_SIZE = bufferSize;
   }
 
   public void run() {
@@ -28,7 +22,7 @@ public class RequestHandlerThread extends Thread {
 
         Socket serverSocket = new Socket(clientRequest.getHost(), 80);
 
-        BufferedOutputStream serverOut = new BufferedOutputStream(serverSocket.getOutputStream(), BUFFER_SIZE);
+        BufferedOutputStream serverOut = new BufferedOutputStream(serverSocket.getOutputStream());
         serverOut.write(clientRequest.toByteBuffer());
         serverOut.flush();
 
