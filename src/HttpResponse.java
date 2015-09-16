@@ -71,9 +71,10 @@ public class HttpResponse {
     return headers;
   }
 
-  public void send(OutputStream clientOutputStream) throws IOException{
+  public void send(OutputStream clientOutputStream) throws IOException {
     BufferedOutputStream out = new BufferedOutputStream(clientOutputStream);
     out.write(rawHeaders);
+    out.flush();
     int bytesRead;
     byte[] buffer = new byte[Constants.BUFFER_SIZE];
     while ((bytesRead = in.read(buffer)) > 0) {

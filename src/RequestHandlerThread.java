@@ -21,13 +21,11 @@ public class RequestHandlerThread extends Thread {
         System.out.printf("[%s] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), clientRequest);
 
         Socket serverSocket = new Socket(clientRequest.getHost(), 80);
-
-        BufferedOutputStream serverOut = new BufferedOutputStream(serverSocket.getOutputStream());
-        serverOut.write(clientRequest.toByteBuffer());
-        serverOut.flush();
+        clientRequest.send(serverSocket.getOutputStream());
 
         HttpResponse serverResponse = new HttpResponse(serverSocket.getInputStream());
         serverResponse.send(clientSocket.getOutputStream());
+
         System.out.printf("Done. Active Thread: %d\r", Thread.activeCount());
 
         serverSocket.close();

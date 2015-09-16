@@ -8,13 +8,13 @@ public class HttpRequest {
 
   private String method;
   private String url;
-  private String httpVersion;
   private HashMap<String, String> headers = new HashMap<String, String>();
-  private byte[] rawRequest;
+  private byte[] rawHeaders;
+  private BufferedInputStream in;
 
   public HttpRequest(InputStream clientInputStream) throws IOException, MalformedRequestException {
     try {
-      BufferedInputStream in = new BufferedInputStream(clientInputStream);
+      in = new BufferedInputStream(clientInputStream);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
 
       String header = "";
@@ -38,7 +38,6 @@ public class HttpRequest {
       String[] parts = line.split("\\s");
       method = parts[0];
       url = parts[1];
-      httpVersion = parts[2].substring(4);
 
       int fromIndex = toIndex + 2;
       while ((toIndex = header.indexOf("\r\n", fromIndex)) != -1) {
@@ -56,18 +55,7 @@ public class HttpRequest {
         }
       }
 
-      // Read body if "Content-Length" is present in the headers.
-      if (headers.containsKey("Content-Length")) {
-        int bodySize = Integer.parseInt(headers.get("Content-Length"));
-        byte[] buffer = new byte[bodySize];
-        int read = in.read(buffer, 0, bodySize);
-        if (read != bodySize) {
-          throw new MalformedRequestException("Content-Length mismatch!");
-        }
-        out.write(buffer);
-      }
-
-      rawRequest = out.toByteArray();
+      rawHeaders = out.toByteArray();
     } catch (IOException e) {
       System.out.printf("Exception in HttpRequest: %s\n", e.getMessage());
       throw e;
@@ -84,10 +72,6 @@ public class HttpRequest {
     return url;
   }
 
-  public String getHttpVersion() {
-    return httpVersion;
-  }
-
   public HashMap<String, String> getHeaders() {
     return headers;
   }
@@ -96,11 +80,22 @@ public class HttpRequest {
     return headers.get("Host");
   }
 
-  public byte[] toByteBuffer() {
-    return rawRequest;
-  }
-
   public String toString() {
     return String.format("%s %s", method, url);
+  }
+
+  public void send(OutputStream serverOutputStream) throws IOException, MalformedRequestException {
+    BufferedOutputStream out = new BufferedOutputStream(serverOutputStream);
+    out.write(rawHeaders);
+    out.flush();
+    if (headers.containsKey("Content-Length")) {
+      int bodySize = Integer.parseInt(headers.get("Content-Length"));
+      byte[] buffer = new byte[bodySize];
+      int read = in.read(buffer, 0, bodySize);
+      if (read != bodySize) {
+        throw new MalformedRequestException("Content-Length mismatch!");
+      }
+      out.write(buffer);
+    }
   }
 }
