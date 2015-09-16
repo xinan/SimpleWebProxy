@@ -9,7 +9,14 @@ public class ProgressBar {
   private long current = 0;
 
   public ProgressBar(String contentLength) {
-    this(Long.parseLong(contentLength));
+    long parsed;
+    try {
+      parsed = Long.parseLong(contentLength);
+    } catch (NumberFormatException e) {
+      parsed = -1;
+    }
+    size = parsed;
+    System.out.print(getBar());
   }
 
   public ProgressBar(long contentLength) {
@@ -29,11 +36,14 @@ public class ProgressBar {
     } catch (NumberFormatException e) {
       numCols = 80;
     }
+
+    long total = size == -1 ? current : size;
+
     char[] equals = new char[numCols - 6];
     char[] spaces = new char[numCols - 6];
     Arrays.fill(equals, '=');
     Arrays.fill(spaces, ' ');
-    int percentage = (int) (current * 100F / size);
+    int percentage = (int) (current * 100F / total);
     int numEquals = (int) (percentage / 100F * (numCols - 6));
     int numSpaces = numCols - 6 - numEquals;
     String downloaded = new String(equals, 0, numEquals);
