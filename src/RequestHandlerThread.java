@@ -40,8 +40,8 @@ public class RequestHandlerThread extends Thread {
       } finally {
         clientSocket.close();
       }
-    } catch (IOException ex) {
-      ex.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 }
