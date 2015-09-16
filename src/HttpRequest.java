@@ -57,7 +57,6 @@ public class HttpRequest {
 
       rawHeaders = out.toByteArray();
     } catch (IOException e) {
-      System.out.printf("Exception in HttpRequest: %s\n", e.getMessage());
       throw e;
     } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
       throw new MalformedRequestException("Invalid request format!");
@@ -96,6 +95,7 @@ public class HttpRequest {
         throw new MalformedRequestException("Content-Length mismatch!");
       }
       out.write(buffer);
+      out.flush();
     }
   }
 }
