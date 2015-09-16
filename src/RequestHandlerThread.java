@@ -26,8 +26,6 @@ public class RequestHandlerThread extends Thread {
         HttpResponse serverResponse = new HttpResponse(serverSocket.getInputStream());
         serverResponse.send(clientSocket.getOutputStream());
 
-        System.out.printf("Done. Active Thread: %d\r", Thread.activeCount());
-
         serverSocket.close();
       } catch (SocketException e) {
         System.out.printf("Client closed connection.\n");

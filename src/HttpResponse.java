@@ -77,11 +77,13 @@ public class HttpResponse {
     BufferedOutputStream out = new BufferedOutputStream(clientOutputStream);
     out.write(rawHeaders);
     out.flush();
+    ProgressBar progressBar = new ProgressBar(headers.get("Content-Length"));
     int bytesRead;
     byte[] buffer = new byte[Constants.BUFFER_SIZE];
     while ((bytesRead = in.read(buffer)) > 0) {
       out.write(buffer, 0, bytesRead);
       out.flush();
+      progressBar.update(bytesRead);
     }
   }
 }
