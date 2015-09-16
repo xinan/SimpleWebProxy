@@ -29,16 +29,15 @@ public class RequestHandlerThread extends Thread {
         System.out.printf("Done. Active Thread: %d\r", Thread.activeCount());
 
         serverSocket.close();
-        clientSocket.close();
       } catch (SocketException e) {
         System.out.printf("Client closed connection.\n");
       } catch (UnknownHostException e) {
         clientSocket.getOutputStream().write("HTTP/1.0 502 Bad Gateway\r\n\r\n".getBytes());
-        clientSocket.close();
       } catch (IOException e) {
         e.printStackTrace();
-      } catch (MalformedRequestException e) {
+      } catch (MalformedRequestException | MalformedResponseException e) {
         clientSocket.getOutputStream().write(e.getMessage().getBytes());
+      } finally {
         clientSocket.close();
       }
     } catch (IOException ex) {

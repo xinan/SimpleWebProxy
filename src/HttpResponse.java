@@ -12,7 +12,7 @@ public class HttpResponse {
   private byte[] rawHeaders;
   private BufferedInputStream in;
 
-  public HttpResponse(InputStream serverInputStream) throws IOException {
+  public HttpResponse(InputStream serverInputStream) throws IOException, MalformedResponseException {
     try {
       in = new BufferedInputStream(serverInputStream);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -56,6 +56,8 @@ public class HttpResponse {
     } catch (IOException e) {
       System.out.printf("Exception in HttpResponse: %s\n", e.getMessage());
       throw e;
+    } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
+      throw new MalformedResponseException("Invalid response from server!");
     }
   }
 
