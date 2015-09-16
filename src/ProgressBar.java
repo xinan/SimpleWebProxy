@@ -37,18 +37,21 @@ public class ProgressBar {
       numCols = 80;
     }
 
-    long total = size == -1 ? current : size;
-
     char[] equals = new char[numCols - 6];
     char[] spaces = new char[numCols - 6];
     Arrays.fill(equals, '=');
     Arrays.fill(spaces, ' ');
-    int percentage = (int) (current * 100F / total);
+
+    int percentage;
+    if (size == -1) {
+      percentage = 100;
+    } else {
+      percentage = (int) (current * 100F / size);
+    }
     int numEquals = (int) (percentage / 100F * (numCols - 6));
     int numSpaces = numCols - 6 - numEquals;
-    String downloaded = new String(equals, 0, numEquals);
+    String processed = new String(equals, 0, numEquals);
     String remaining = new String(spaces, 0, numSpaces);
-    String done = percentage == 100 ? "Done" : "";
-    return String.format("|%s%s%3d%%| %s\r", downloaded, remaining, percentage, done);
+    return String.format("|%s%s%3d%%| Remaining: %d\r", processed, remaining, percentage, Thread.activeCount() - 3);
   }
 }
