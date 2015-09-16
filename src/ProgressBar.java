@@ -48,6 +48,7 @@ public class ProgressBar {
     int numSpaces = numCols - 6 - numEquals;
     String downloaded = new String(equals, 0, numEquals);
     String remaining = new String(spaces, 0, numSpaces);
-    return String.format("|%s%s%3d%%|\r", downloaded, remaining, percentage);
+    String done = percentage == 100 ? "Done" : "";
+    return String.format("|%s%s%3d%%| %s\r", downloaded, remaining, percentage, done);
   }
 }
