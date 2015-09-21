@@ -83,6 +83,10 @@ public class HttpRequest {
     return String.format("%s %s", method, url);
   }
 
+  public int hashCode() {
+    return toString().hashCode();
+  }
+
   public void send(OutputStream serverOutputStream) throws IOException, MalformedRequestException {
     BufferedOutputStream out = new BufferedOutputStream(serverOutputStream);
     out.write(rawHeaders);
