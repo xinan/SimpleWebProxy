@@ -44,7 +44,7 @@ public class HttpResponse {
         if (line.isEmpty()) {
           break;
         }
-        parts = line.split("\\s*:\\s*");
+        parts = line.split("\\s*:\\s*", 2);
         headers.put(parts[0], parts[1]);
       }
       headers.put("Connection", "close");
