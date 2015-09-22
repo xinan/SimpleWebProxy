@@ -82,7 +82,31 @@ public class HttpResponse {
     while ((bytesRead = in.read(buffer)) > 0) {
       out.write(buffer, 0, bytesRead);
       out.flush();
-      progressBar.update(bytesRead);
+      if (progressBar.update(bytesRead)) { // ProgressBar would return true if downloaded == Content-Length
+        break;
+      }
     }
+  }
+
+  public void cacheAndSend(OutputStream fileOutputStream, OutputStream clientOutputStream) throws IOException {
+    BufferedOutputStream clientOut = new BufferedOutputStream(clientOutputStream);
+    BufferedOutputStream fileOut = new BufferedOutputStream(fileOutputStream);
+
+    clientOut.write(rawHeaders);
+    clientOut.flush();
+    fileOut.write(rawHeaders);
+
+    ProgressBar progressBar = new ProgressBar(headers.get("Content-Length"));
+    int bytesRead;
+    byte[] buffer = new byte[Constants.BUFFER_SIZE];
+    while ((bytesRead = in.read(buffer)) > 0) {
+      clientOut.write(buffer, 0, bytesRead);
+      clientOut.flush();
+      fileOut.write(buffer, 0, bytesRead);
+      if (progressBar.update(bytesRead)) { // ProgressBar would return true if downloaded == Content-Length
+        break;
+      }
+    }
+    fileOut.flush();
   }
 }
