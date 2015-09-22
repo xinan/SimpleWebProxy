@@ -22,13 +22,9 @@ public class RequestHandlerThread extends Thread {
         HttpRequest clientRequest = new HttpRequest(clientSocket.getInputStream());
         System.out.printf("[%s] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), clientRequest);
 
-        Socket serverSocket = new Socket(clientRequest.getHost(), 80);
-        clientRequest.send(serverSocket.getOutputStream());
+        ResponseCache.process(clientRequest, clientSocket.getOutputStream());
 
-        HttpResponse serverResponse = new HttpResponse(serverSocket.getInputStream());
-        serverResponse.send(clientSocket.getOutputStream());
-
-        serverSocket.close();
+        clientSocket.close();
       } catch (SocketException e) {
         System.out.printf("[%s] Abandon request\n", clientSocket.getInetAddress().getCanonicalHostName());
       } catch (SocketTimeoutException e) {
