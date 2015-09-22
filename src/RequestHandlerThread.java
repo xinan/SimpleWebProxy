@@ -18,7 +18,7 @@ public class RequestHandlerThread extends Thread {
   public void run() {
     try {
       try {
-        clientSocket.setSoTimeout(1000);
+        clientSocket.setSoTimeout(3000);
         HttpRequest clientRequest = new HttpRequest(clientSocket.getInputStream());
         System.out.printf("[%s] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), clientRequest);
 
