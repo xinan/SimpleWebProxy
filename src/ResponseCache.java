@@ -20,14 +20,12 @@ public class ResponseCache {
         Files.copy(fileIn.toPath(), clientOutputStream);
         System.out.println("From cache...");
       } else {
-        String filePath = Paths.get(Constants.CACHE_PATH, request.getHost(), request.hashCode() + "_" + System.currentTimeMillis()).toString();
         Socket serverSocket = new Socket(request.getHost(), 80);
-
         request.send(serverSocket.getOutputStream());
-
         HttpResponse response = new HttpResponse(serverSocket.getInputStream());
 
         if (request.isCacheable()) {
+          String filePath = Paths.get(Constants.CACHE_PATH, request.getHost(), request.hashCode() + "_" + response.getLastModified()).toString();
           File fileOut = new File(filePath);
           Files.createDirectories(fileOut.toPath().getParent());
           FileOutputStream fileOutStream = new FileOutputStream(fileOut);

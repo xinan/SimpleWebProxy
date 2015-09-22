@@ -1,6 +1,5 @@
 import java.io.*;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Xinan on 15/9/15.
@@ -81,7 +80,7 @@ public class HttpRequest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
       out.write(String.format("%s %s %s\r\n", method, url, httpVersion).getBytes());
-      for (Map.Entry<String, String> pair : headers.entrySet()) {
+      for (HashMap.Entry<String, String> pair : headers.entrySet()) {
         out.write(String.format("%s: %s\r\n", pair.getKey(), pair.getValue()).getBytes());
       }
       out.write("\r\n".getBytes());
