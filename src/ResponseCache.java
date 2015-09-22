@@ -21,7 +21,7 @@ public class ResponseCache {
     try {
       SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
       dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-      Socket serverSocket = new Socket(request.getHost(), 80);
+      Socket serverSocket = new Socket(request.getHost(), request.getPort());
       File fileIn = null;
 
       if (map.containsKey(request.toString())) {

@@ -9,6 +9,7 @@ public class HttpRequest {
   private String method;
   private String url;
   private String httpVersion;
+  private int port = 80;
   private HashMap<String, String> headers = new HashMap<String, String>();
   private BufferedInputStream in;
 
@@ -45,8 +46,13 @@ public class HttpRequest {
           break;
         }
 
-        parts = line.split("\\s*:\\s*");
+        parts = line.split("\\s*:\\s*", 2);
         headers.put(parts[0], parts[1]);
+      }
+      parts = headers.get("Host").split("\\s*:\\s*", 2);
+      if (parts.length == 2) {
+        port = Integer.parseInt(parts[1]);
+        headers.put("Host", parts[0]);
       }
       headers.remove("Connection");
     } catch (IOException e) {
@@ -70,6 +76,10 @@ public class HttpRequest {
 
   public String getHost() {
     return headers.get("Host");
+  }
+
+  public int getPort() {
+    return port;
   }
 
   public void setIfModifiedSince(String date) {
