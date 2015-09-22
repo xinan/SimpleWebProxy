@@ -13,6 +13,8 @@ public class WebProxy {
       Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
+            System.out.printf("Clearing cache...\n");
+            ResponseCache.clearCache();
             System.out.printf("Server is shutting down...\n");
             socket.close();
           } catch (IOException e) {
