@@ -3,6 +3,10 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -15,35 +19,61 @@ public class ResponseCache {
   public static void process(HttpRequest request, OutputStream clientOutputStream)
       throws MalformedRequestException, MalformedResponseException, SocketException {
     try {
-      if (map.containsKey(request.toString())) {
-        File fileIn = new File(map.get(request.toString()));
-        Files.copy(fileIn.toPath(), clientOutputStream);
-        System.out.println("From cache...");
-      } else {
-        Socket serverSocket = new Socket(request.getHost(), 80);
-        request.send(serverSocket.getOutputStream());
-        HttpResponse response = new HttpResponse(serverSocket.getInputStream());
+      SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+      dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+      Socket serverSocket = new Socket(request.getHost(), 80);
+      File fileIn = null;
 
-        if (request.isCacheable()) {
-          String filePath = Paths.get(Constants.CACHE_PATH, request.getHost(), request.hashCode() + "_" + response.getLastModified()).toString();
-          File fileOut = new File(filePath);
-          Files.createDirectories(fileOut.toPath().getParent());
-          FileOutputStream fileOutStream = new FileOutputStream(fileOut);
-          response.cacheAndSend(fileOutStream, clientOutputStream);
-          map.put(request.toString(), fileOut.getPath());
-          fileOutStream.close();
-        } else {
-          response.send(clientOutputStream);
-        }
-        serverSocket.close();
+      if (map.containsKey(request.toString())) {
+        fileIn = new File(map.get(request.toString()));
+        // Get the Last-Modified from filename and set Last-Modified header.
+        Date lastModified = new Date(Long.parseLong(fileIn.getName().split("_")[0]));
+        request.setIfModifiedSince(dateFormat.format(lastModified));
       }
+
+      request.send(serverSocket.getOutputStream());
+      HttpResponse response = new HttpResponse(serverSocket.getInputStream());
+
+      if (fileIn != null) { // There is a cached file
+        if (response.getResponseCode().equals("304")) { // Cache is still valid
+          Files.copy(fileIn.toPath(), clientOutputStream);
+          System.out.printf("Cache hit\n");
+          serverSocket.close();
+          return;
+        } else { // Cache expired
+          map.remove(request.toString());
+          fileIn.delete();
+        }
+      }
+
+      if (request.isCacheable() && response.getLastModified() != null) { // No cached file but can be cached
+        // File name format: <lastModified>_<unsignedHashCode>.
+        String fileName = String.format("%d_%d", dateFormat.parse(response.getLastModified()).getTime(), request.hashCode() & 0xFFFFFFFFL);
+        // Caches for different hosts are stored in different directories.
+        String filePath = Paths.get(Constants.CACHE_PATH, request.getHost(), fileName).toString();
+
+        File fileOut = new File(filePath);
+        Files.createDirectories(fileOut.toPath().getParent());
+        FileOutputStream fileOutStream = new FileOutputStream(fileOut);
+
+        response.cacheAndSend(fileOutStream, clientOutputStream);
+        fileOutStream.close();
+
+        map.put(request.toString(), fileOut.getPath());
+      } else { // No cached file and cannot be cached, e.g. POST request cannot be cached
+        response.send(clientOutputStream);
+      }
+
+      serverSocket.close();
     } catch (FileNotFoundException e) {
       System.out.printf("File Not Found: %s\n", e.getMessage());
     } catch (SocketException | MalformedRequestException | MalformedResponseException e) {
       throw e;
     } catch (IOException e) {
       e.printStackTrace();
-      System.out.println("File transfer failed");
+      System.out.printf("File transfer failed\n");
+    } catch (ParseException e) {
+      System.out.printf("Parse last modified date failed\n");
     }
   }
 
