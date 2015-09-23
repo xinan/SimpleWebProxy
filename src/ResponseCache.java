@@ -18,7 +18,7 @@ public class ResponseCache {
 
   private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
 
-  public static void process(Socket clientSocket, OutputStream clientOutputStream) throws IOException{
+  public static void process(Socket clientSocket) throws IOException{
     try {
       HttpRequest request = new HttpRequest(clientSocket.getInputStream());
 
@@ -41,7 +41,7 @@ public class ResponseCache {
         if (response.getResponseCode().equals("304")) { // Cache is still valid
           ProgressBar.clear();
           System.out.printf("[%s][cache] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), request);
-          Files.copy(fileIn.toPath(), clientOutputStream);
+          Files.copy(fileIn.toPath(), clientSocket.getOutputStream());
           serverSocket.close();
           return;
         } else { // Cache expired
@@ -63,12 +63,12 @@ public class ResponseCache {
         Files.createDirectories(fileOut.toPath().getParent());
         FileOutputStream fileOutStream = new FileOutputStream(fileOut);
 
-        response.cacheAndSend(fileOutStream, clientOutputStream);
+        response.cacheAndSend(fileOutStream, clientSocket.getOutputStream());
         fileOutStream.close();
 
         map.put(request.toString(), fileOut.getPath());
       } else { // No cached file and cannot be cached, e.g. POST request cannot be cached
-        response.send(clientOutputStream);
+        response.send(clientSocket.getOutputStream());
       }
 
       serverSocket.close();

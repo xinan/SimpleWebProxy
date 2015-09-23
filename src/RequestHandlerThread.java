@@ -17,7 +17,7 @@ public class RequestHandlerThread extends Thread {
       try {
         clientSocket.setSoTimeout(3000);
 
-        ResponseCache.process(clientSocket, clientSocket.getOutputStream());
+        ResponseCache.process(clientSocket);
       } catch (IOException e) {
         e.printStackTrace();
       } finally {
