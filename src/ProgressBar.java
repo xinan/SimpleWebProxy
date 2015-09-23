@@ -30,6 +30,19 @@ public class ProgressBar {
     return current == size;
   }
 
+  public static void clear() {
+    int numCols;
+    try {
+      numCols = Integer.parseInt(System.getenv("COLUMNS"));
+    } catch (NumberFormatException e) {
+      numCols = 80;
+    }
+
+    char[] spaces = new char[numCols];
+    Arrays.fill(spaces, ' ');
+    System.out.printf("%s\r", new String(spaces, 0, numCols));
+  }
+
   private String getBar() {
     int numCols;
     try {

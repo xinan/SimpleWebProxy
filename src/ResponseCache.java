@@ -39,8 +39,9 @@ public class ResponseCache {
 
       if (fileIn != null) { // There is a cached file
         if (response.getResponseCode().equals("304")) { // Cache is still valid
-          Files.copy(fileIn.toPath(), clientOutputStream);
+          ProgressBar.clear();
           System.out.printf("[%s][cache] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), request);
+          Files.copy(fileIn.toPath(), clientOutputStream);
           serverSocket.close();
           return;
         } else { // Cache expired
@@ -49,6 +50,7 @@ public class ResponseCache {
         }
       }
 
+      ProgressBar.clear();
       System.out.printf("[%s][fresh] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), request);
 
       if (request.isCacheable() && response.getLastModified() != null) { // No cached file but can be cached
