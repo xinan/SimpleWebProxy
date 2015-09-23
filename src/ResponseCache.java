@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
@@ -16,9 +18,10 @@ public class ResponseCache {
 
   private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<String, String>();
 
-  public static void process(HttpRequest request, OutputStream clientOutputStream)
-      throws MalformedRequestException, MalformedResponseException, SocketException {
+  public static void process(Socket clientSocket, OutputStream clientOutputStream) throws IOException{
     try {
+      HttpRequest request = new HttpRequest(clientSocket.getInputStream());
+
       SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
       dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
       Socket serverSocket = new Socket(request.getHost(), request.getPort());
@@ -37,7 +40,7 @@ public class ResponseCache {
       if (fileIn != null) { // There is a cached file
         if (response.getResponseCode().equals("304")) { // Cache is still valid
           Files.copy(fileIn.toPath(), clientOutputStream);
-          System.out.printf("Cache hit\n");
+          System.out.printf("[%s][cache] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), request);
           serverSocket.close();
           return;
         } else { // Cache expired
@@ -45,6 +48,8 @@ public class ResponseCache {
           fileIn.delete();
         }
       }
+
+      System.out.printf("[%s][fresh] %s\n", clientSocket.getInetAddress().getCanonicalHostName(), request);
 
       if (request.isCacheable() && response.getLastModified() != null) { // No cached file but can be cached
         // File name format: <lastModified>_<unsignedHashCode>.
@@ -67,8 +72,14 @@ public class ResponseCache {
       serverSocket.close();
     } catch (FileNotFoundException e) {
       System.out.printf("File Not Found: %s\n", e.getMessage());
-    } catch (SocketException | MalformedRequestException | MalformedResponseException e) {
-      throw e;
+    } catch (SocketException e) {
+      System.out.printf("[%s][cancel] Abandon request\n", clientSocket.getInetAddress().getCanonicalHostName());
+    } catch (SocketTimeoutException e) {
+      System.out.printf("[%s][timeout] Socket read timeout, ignoring...\n", clientSocket.getInetAddress().getCanonicalHostName());
+    } catch (UnknownHostException e) {
+      clientSocket.getOutputStream().write("HTTP/1.0 502 Bad Gateway\r\n\r\n502 Bad Gateway".getBytes());
+    } catch (MalformedRequestException | MalformedResponseException e) {
+      clientSocket.getOutputStream().write(e.getMessage().getBytes());
     } catch (IOException e) {
       e.printStackTrace();
       System.out.printf("File transfer failed\n");
