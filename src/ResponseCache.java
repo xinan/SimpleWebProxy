@@ -84,9 +84,10 @@ public class ResponseCache {
       clientSocket.getOutputStream().write(e.getMessage().getBytes());
     } catch (IOException e) {
       e.printStackTrace();
-      System.out.printf("File transfer failed\n");
     } catch (ParseException e) {
       System.out.printf("Parse last modified date failed\n");
+    } finally {
+      clientSocket.close();
     }
   }
 
