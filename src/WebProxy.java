@@ -8,8 +8,12 @@ import java.net.SocketException;
 public class WebProxy {
   public static void main(String[] args) {
     try {
+      // Start server.
       int port = Integer.parseInt(args[0]);
       final ServerSocket socket = new ServerSocket(port);
+      System.out.printf("Server listening on %d...\n\n", port);
+
+      // Set shutdown hook to clear cache and close socket.
       Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
@@ -22,7 +26,8 @@ public class WebProxy {
           }
         }
       });
-      System.out.printf("Server listening on %d...\n\n", port);
+
+      // Accepting request.
       while (!socket.isClosed()) {
         (new RequestHandlerThread(socket.accept())).start();
       }

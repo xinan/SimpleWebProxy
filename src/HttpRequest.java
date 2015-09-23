@@ -9,6 +9,7 @@ public class HttpRequest {
   private String method;
   private String url;
   private String httpVersion;
+  private String host;
   private int port = 80;
   private HashMap<String, String> headers = new HashMap<String, String>();
   private BufferedInputStream in;
@@ -49,12 +50,14 @@ public class HttpRequest {
         parts = line.split("\\s*:\\s*", 2);
         headers.put(parts[0], parts[1]);
       }
-      parts = headers.get("Host").split("\\s*:\\s*", 2);
-      if (parts.length == 2) {
+      String hostField = headers.get("Host");
+      parts = hostField.split("\\s*:\\s*", 2);
+      host = parts[0];
+      if (parts.length == 2) { // If there is a port number
         port = Integer.parseInt(parts[1]);
-        headers.put("Host", parts[0]);
       }
-      headers.remove("Connection");
+      headers.remove("Connection"); // Remove `Connection: keep-alive`
+      url = url.replaceFirst("http://" + hostField, "");
     } catch (IOException e) {
       throw e;
     } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
@@ -75,7 +78,7 @@ public class HttpRequest {
   }
 
   public String getHost() {
-    return headers.get("Host");
+    return host;
   }
 
   public int getPort() {
@@ -101,7 +104,7 @@ public class HttpRequest {
   }
 
   public String toString() {
-    return String.format("%s %s", method, url);
+    return String.format("%s http://%s:%d%s", method, host, port, url);
   }
 
   public int hashCode() {
