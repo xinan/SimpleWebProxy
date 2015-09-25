@@ -32,7 +32,7 @@ public class HttpResponse {
       // Process response headers
       int toIndex = header.indexOf("\r\n", 0);
       String line = "HTTP/1.0" + header.substring(8, toIndex);
-      String[] parts = line.split("\\s");
+      String[] parts = line.split("\\s", 3);
       httpVersion = parts[0];
       responseCode = parts[1];
       responseMessage = parts[2];
