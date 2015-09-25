@@ -79,7 +79,7 @@ public class ResponseCache {
     } catch (SocketTimeoutException e) {
       System.out.printf("[%s][timeout] Socket read timeout, ignoring...\n", clientSocket.getInetAddress().getCanonicalHostName());
     } catch (UnknownHostException e) {
-      clientSocket.getOutputStream().write("HTTP/1.0 502 Bad Gateway\r\n\r\n502 Bad Gateway".getBytes());
+      clientSocket.getOutputStream().write("HTTP/1.0 502 Bad Gateway\r\n\r\n502 Bad Gateway\n".getBytes());
     } catch (MalformedRequestException | MalformedResponseException e) {
       clientSocket.getOutputStream().write(e.getMessage().getBytes());
     } catch (IOException e) {

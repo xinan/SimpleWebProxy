@@ -57,7 +57,6 @@ public class HttpRequest {
         port = Integer.parseInt(parts[1]);
       }
       headers.remove("Connection"); // Remove `Connection: keep-alive`
-      url = url.replaceFirst("http://" + hostField, "");
     } catch (IOException e) {
       throw e;
     } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
@@ -104,7 +103,7 @@ public class HttpRequest {
   }
 
   public String toString() {
-    return String.format("%s http://%s:%d%s", method, host, port, url);
+    return String.format("%s %s", method, url);
   }
 
   public int hashCode() {
